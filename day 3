@@ -1,0 +1,215 @@
+coretaas 10.1.0.6 /30
+corebaba 10.1.0.13 /30
+
+coretaas
+conf t 
+int fa 0/9
+no sw 
+ip add 10.1.0.6 255.255.255.252
+end
+
+
+corebaba
+conf t
+int fa 0/9
+no sw
+ip add 10.1.0.13 255.255.255.252
+end
+
+
+
+for next hop to another router
+r1
+conf t 
+ip route 10.1.1.5 255.255.255.255 10.1.1.2
+end
+ping 10.1.1.5
+
+
+r4 
+conf t 
+ip route 10.1.1.6 255.255.255.255 10.1.1.9
+end
+ping 10.1.1.6
+
+
+r3 going to r1
+conf t 
+ip route 10.1.1.1 255.255.255.255 10.1.1.5
+end 
+ping 10.1.1.1
+
+
+r1 going back to r3
+conf t 
+ip route 10.1.1.6 255.255.255.255 10.1.1.2
+end 
+ping 10.1.1.1
+
+r3
+conf t 
+!no ip route 10.1.1.1 255.255.255.255 10.1.1.2
+ip route 10.1.1.0 255.255.255.252 10.1.1.5
+end 
+ping 10.1.1.1
+
+
+
+r1
+conf t 
+ip route 10.1.1.4 255.255.255.255 10.1.1.2
+ip route 10.1.1.8 255.255.255.255 10.1.1.2
+end 
+ 
+r4
+conf t 
+ip route 10.1.1.4 255.255.255.255 10.1.1.9
+ip route 10.1.1.0 255.255.255.255 10.1.1.9
+end 
+
+r2
+conf t 
+ip route 10.1.1.8 255.255.255.255 10.1.1.6
+end 
+
+ergip
+
+config t
+ router eigrp 100
+  no auto-summary
+  network 10.1.4.8 0.0.0.3
+  network 10.2.1.0 0.0.0.255
+  network 10.2.2.0 0.0.0.255
+  network 192.168.1.128 0.0.0.31
+  end
+sh ip eigrp neigh
+
+eigrp
+1 longest prefix
+2 admin distance
+  - L/C =0
+  - S = 1
+  - D = 90 
+3 metric: 
+__BW__
+ d1 > vlan 10: 1_000_000
+ r4 > d1: 10_000
+
+10^7 = (10_000_000)/ 10_000
+    BW = 1_000
+
+__DY__
+r4 : 1_000 usec
+D1 : 10 usec
+
+1_000 + 10 = 1_010
+DY = 101
+1_101 * 256 = 
+
+dynamic routing 
+igp
+-link 
+
+!@R4
+conf t
+ router ospf 1
+  router-id 4.4.4.4
+  network 4.4.4.4 0.0.0.0 area 0
+  network 10.1.1.8 0.0.0.3 area 0
+  end
+
+
+
+corebaba
+
+conf t 
+ int fa0/9
+ no ip add
+  switch
+ monitor session 1 source int g0/1 both
+ monitor session 1 destination int fa0/1 , fa0/9
+ end
+
+r3
+Ethernet1/2 is up, line protocol is up 
+  Internet Address 10.1.1.9/30, Area 0, Attached via Network Statement
+  Process ID 1, Router ID 3.3.3.3, Network Type BROADCAST, Cost: 10
+  Topology-MTID    Cost    Disabled    Shutdown      Topology Name
+        0           10        no          no            Base
+  Transmit Delay is 1 sec, State DROTHER, Priority 1
+  Designated Router (ID) 4.4.4.4, Interface address 10.1.1.10
+  Backup Designated router (ID) 4.4.4.4, Interface address 10.1.1.10
+  Timer intervals configured, Hello 10, Dead 40, Wait 40, Retransmit 5
+    oob-resync timeout 40
+    Hello due in 00:00:08
+  Supports Link-local Signaling (LLS)
+  Cisco NSF helper support enabled
+  IETF NSF helper support enabled
+  Index 1/2/2, flood queue length 0
+  Next 0x0(0)/0x0(0)/0x0(0)
+  Last flood scan length is 1, maximum is 2
+  Last flood scan time is 0 msec, maximum is 1 msec
+  Neighbor Count is 1, Adjacent neighbor count is 1 
+    Adjacent with neighbor 4.4.4.4  (Designated Router)
+  Suppress hello for 0 neighbor(s)
+
+
+r4
+Ethernet1/2 is up, line protocol is up 
+  Internet Address 10.1.1.10/30, Area 0, Attached via Network Statement
+  Process ID 1, Router ID 4.4.4.4, Network Type POINT_TO_POINT, Cost: 10
+  Topology-MTID    Cost    Disabled    Shutdown      Topology Name
+        0           10        no          no            Base
+  Transmit Delay is 1 sec, State POINT_TO_POINT
+  Timer intervals configured, Hello 10, Dead 40, Wait 40, Retransmit 5
+    oob-resync timeout 40
+    Hello due in 00:00:00
+  Supports Link-local Signaling (LLS)
+  Cisco NSF helper support enabled
+  IETF NSF helper support enabled
+  Index 1/2/2, flood queue length 0
+  Next 0x0(0)/0x0(0)/0x0(0)
+  Last flood scan length is 1, maximum is 1
+  Last flood scan time is 0 msec, maximum is 0 msec
+  Neighbor Count is 1, Adjacent neighbor count is 1 
+    Adjacent with neighbor 3.3.3.3
+  Suppress hello for 0 neighbor(s)
+
+
+summarize routes
+       .32
+10.10.33.1/32 =  3rd 4i .36
+10.10.33.129/32 =
+10.10.34.1/32 =
+10.10.34.129/32 =
+conf t
+no ip nat pool NATPOOL 209.9.9.10 209.9.9.20 netmask 255.255.255.0
+ no ip nat inside source list 1 pool NATPOOL
+ end
+
+p1 
+conf t 
+ip route 0.0.0.0 0.0.0.0 10.2.1.1
+p2
+ conf t 
+ip route 0.0.0.0 0.0.0.0 10.2.1.2
+
+
+config t
+ router bgp 2 
+ bgp log-neighbor-changes
+ neighbor 32.3.2.3 remote-as 3 
+ neighbor 207.7.7.1 remote-as 1
+ neighbor 24.2.4.4  remote-as 45
+ neighbor 25.2.5.5 remote-as 45
+ address-family ipv4
+  neighbor 32.3.2.3  activate
+  neighbor 207.7.7.1  activate
+  neighbor 24.2.4.4  activate
+  neighbor 25.2.5.5 activate
+  network 32.3.2.0 mask 255.255.255.0
+  network 207.7.7.0 mask 255.255.255.0
+  network 24.2.4.0  mask 255.255.255.0
+  network 25.2.5.0  mask 255.255.255.0
+  network 22.22.22.22 mask 255.255.255.0
+  end
