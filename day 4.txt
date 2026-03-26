@@ -1,0 +1,126 @@
+tcp.flags.syn ==1 
+
+
+config t
+NO ip access-list standard NOPORN
+ip access-list standard NOPORN
+DENY 66.254.0.0 0.0.255.255
+deny 161.49.0.0 0.0.255.255
+DENY 104.21.0.0 0.0.255.255
+DENY 68.235.0.0 0.0.255.255
+DENY 104.17.0.0 0.0.255.255
+DENY 88.208.0.0 0.0.255.255
+DENY 208.77.0.0 0.0.255.255
+DENY 172.67.0.0 0.0.255.255
+DENY 45.60.157.0 0.0.0.255
+Permit Any
+Int Gi 1
+ ip access-group NOPORN in
+end
+
+
+
+config t
+no access-list 25
+access-list 25 DENY 162.159.0.0 0.0.255.255
+access-list 25 DENY 104.21.0.0 0.0.255.255
+access-list 25 DENY 13.248.0.0 0.0.255.255
+access-list 25 DENY 104.21.0.0 0.0.255.255
+access-list 25 DENY 5.253.0.0 0.0.255.255
+access-list 25 DENY 208.77.0.0 0.0.255.255
+access-list 25 DENY 172.67.0.0 0.0.255.255
+access-list 25 DENY 50.6.0.0 0.0.255.255 
+access-list 25 DENY 155.137.0.0 0.0.255.255
+access-list 25 DENY 45.60.0.0 0.0.255.255
+access-list 25 permit Any
+Int gi 1
+ ip access-group 25 in
+end
+
+config t
+Int gi 1
+ NO ip access-group 25 in
+end
+
+
+ how to create a firewall policy
+formula:
+
+protocol	hacker		victime 	port:
+
+your hired as a SOC 13 with 150 k/ month config a policy
+bet10.com only http, https, dns is open
+bet11.com only voip port : sip sccp, ping is open
+
+
+conf t
+no ip access-list extended POLICY1
+ ip access-list extended POLICY1
+permit tcp any host 192.168.103.10 eq 80
+permit tcp any host 192.168.103.10 eq 443
+permit tcp any host 192.168.103.10 eq 53
+permit tcp any host 192.168.103.11 eq 5060
+permit tcp any host 192.168.103.11 eq 2000
+permit icmp any host 192.168.103.11 
+int gi 3 
+ip access-group POLICY1 in
+do sh ip access-list POLICY1
+
+
+conf t
+no ip access-list extended POLICY2
+ ip access-list extended POLICY2
+permit tcp any host 192.168.103.10 22
+permit tcp any host 192.168.103.10 5060
+permit tcp any host 192.168.103.10 443
+permit tcp any host 192.168.103.10 53
+permit tcp any host 192.168.103.11 23
+permit tcp any host 192.168.103.11 80
+permit tcp any host 192.168.103.11 22
+int gi 3 
+ip access-group POLICY2 in
+do sh ip access-list POLICY2
+end
+
+Int gi 1
+ NO ip access-group 25 in
+end
+
+config t
+no access-list 8
+access-list 8 permit host 192.168.103.21
+access-list 8 permit host 192.168.103.22
+Int Gi 3
+ ip nat Inside
+Int gi 1
+ ip nat Outside
+IP Nat inside source static tcp 192.168.103.21 80 208.8.8.47 80
+IP Nat inside source static tcp 192.168.103.21 443 208.8.8.47 443
+IP Nat inside source static tcp 192.168.103.22 80 208.8.8.47 8080
+IP Nat inside source static tcp 192.168.103.22 443 208.8.8.47 8443
+IP nat inside source list 8 int gi 1 Overload
+end
+sh ip nat translation
+
+
+
+
+	IPV6
+15 - 1 1 1 1  f
+14 - 1 1 1 0  e
+13 - 1 1 0 1  d
+12 - 1 1 0 0  c
+11 - 1 0 1 1  b
+10 - 1 0 1 0  a
+9  - 1 0 0 1
+8 -  1 0 0 0
+7 -  0 1 1 1
+6 -  0 1 1 0
+5 -  0 1 0 1
+
+4 -  0 1 0 0
+3  - 0 0 1 10                                                                                                                                                                                                                     
+1  - 0 0 0 1
+0  - 0 0 0 0
+
+ip host ed 10.62.62.1
