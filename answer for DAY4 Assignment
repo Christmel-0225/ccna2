@@ -1,0 +1,206 @@
+R4
+
+conf t
+int e3/3
+ip add 208.8.8.11 255.255.255.0
+ip add 208.8.8.12 255.255.255.0 secondary
+no shut
+exit
+int e0/1
+ip add 10.11.11.1 255.255.255.224
+no shut
+int e0/3
+ip add 10.1.2.10 255.255.255.252
+no shut
+exit
+ip route 0.0.0.0 0.0.0.0 208.8.8.2
+router ospf 1
+router-id 4.4.4.4
+network 4.4.4.4 0.0.0.0 area 0
+network 208.8.8.0 0.0.0.255 area 0
+network 10.11.11.0 0.0.0.31 area 0
+network 10.1.2.8 0.0.0.3 area 0
+network 10.1.1.8 0.0.0.3 area 0
+passive-interface e0/1
+exit
+ntp master 1
+ip domain name R4.COM
+crypto key generate rsa modulus 2048
+ip ssh version 2
+username admin priv 15 secret pass
+
+R3:
+conf t
+int e0/3
+ip add 10.1.2.9 255.255.255.252
+no shut
+exit
+int e0/1
+ip add 10.22.22.1 255.255.255.224
+no shut
+exit
+router ospf 1
+router-id 3.3.3.3
+network 3.3.3.3 0.0.0.0 area 0
+network 10.1.2.8 0.0.0.3 area 0
+network 10.1.1.8 0.0.0.3 area 0
+network 10.22.22.0 0.0.0.31 area 0
+passive-interface e0/1
+exit
+ip domain name R3.COM
+crypto key generate rsa modulus 2048
+ip ssh version 2
+username admin priv 15 secret pass
+ip http server
+ip http secure-server
+line vty 0 4
+transport input all
+login local
+end
+
+P1
+conf t
+hostname FINANCE
+int e0/1
+no shut
+ip add 10.11.11.11 255.255.255.224
+ip add 10.11.11.12 255.255.255.224 secondary
+
+ip route 0.0.0.0 0.0.0.0 10.11.11.1
+ip domain name FINANCE.COM
+crypto key generate rsa modulus 2048 
+ip ssh version 2
+username admin priv 15 secret pass
+line vty 0 4
+transport input all
+login local
+exit
+end
+
+
+P2
+conf t
+hostname IT
+ int e0/1
+
+no shut
+ip add 10.22.22.21 255.255.255.224
+ip add 10.22.22.22 255.255.255.224
+
+ip route 0.0.0.0 0.0.0.0 10.22.22.1 
+ip domain name IT.COM
+crypto key generate rsa modulus 2048 
+ip ssh version 2
+username admin priv 15 secret pass
+ line vty 0 4
+transport input all
+login local
+exit
+end
+
+
+
+r4
+conf t 
+ip access-list standard 1999
+deny 10.11.11.0 0.0.0.31
+permit any
+exit
+line vty 0 4
+access-class 1999 in
+end
+
+r4 
+conf t
+ip access-list extended FWP-fin
+permit icmp host 10.11.11.12 host 3.3.3.3 log
+deny icmp 10.11.11.0 0.0.0.31 any log
+permit ip any any
+ex
+int e0/1 
+ip access-group FWP-fin in 
+end
+
+
+r3
+conf t
+ip access-list extended FWP-VTY
+deny tcp 10.11.11.0  0.0.0.31 any eq 23 log
+permit ip any any
+exit
+ line vty 0 4
+access-class FWP-VTY in 
+end
+
+
+
+r4 
+conf t
+ip access-list extended FWP-fin
+15 permit icmp 10.11.11.0 0.0.0.31 10.22.22.0 0.0.0.31 echo-reply
+24 permit tcp  10.11.11.0 0.0.0.31 10.22.22.0 0.0.0.31 eq 23 established log
+25 deny tcp 10.11.11.0 0.0.0.31 10.22.22.0 0.0.0.31 eq 23 log
+end
+
+
+
+r4 
+conf t
+ip access-list extended FWP-R4
+permit tcp any host www.bet11.com eq 21 log
+permit tcp any host www.bet11.com eq 5060 log
+permit tcp any host www.bet11.com eq 3306 log
+permit udp any host www.bet11.com eq 123 log
+permit tcp any host www.bet11.com eq 23 log
+permit tcp any host www.bet12.com eq 993 log
+permit tcp any host www.bet12.com eq 995 log
+permit tcp any host www.bet12.com eq 587 log
+permit tcp any host www.bet12.com eq 465 log
+
+exit
+int e3/3
+ip access-group FWP-R4 in
+end
+
+
+
+in IT
+
+conf t
+ip http server
+ip http secure-server
+
+
+r4
+conf t
+int e3/3
+ip nat outside
+int range e0/1,e0/3,e1/2
+ip nat inside
+ex
+ip access-list extended NAT-POL
+permit ip 10.22.22.0 0.0.0.31 208.8.8.0 0.0.0.255
+ex
+ip nat insisde source list NAT-POL int e3/3 overload
+!
+ip nat inside source static tcp 10.22.22.21 80 208.8.8.100 8080
+ip nat inside source static tcp 10.22.22.21 443 208.8.8.100 8443
+!
+ip nat inside source static tcp 10.22.22.22 80 208.8.8.100 8080
+ip nat inside source static tcp 10.22.22.22 443 208.8.8.100 8443
+
+
+r4 
+conf t
+ip access-list extended FWP-r4
+permit tcp any host www.bet100.com eq 80 log
+permit tcp any host www.bet100.com eq 8080 log
+permit tcp any host www.bet100.com eq 8443 log
+permit tcp any host www.bet100.com eq 443 log
+end
+
+
+
+
+
+
